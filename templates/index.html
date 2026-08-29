@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Hệ Thống Điều Khiển ESP8266 Bằng Cử Chỉ Tay</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #fff; text-align: center; margin: 0; padding: 20px; }
+        h1 { color: #00e676; margin-bottom: 20px; }
+        .container { display: flex; justify-content: center; align-items: flex-start; gap: 30px; flex-wrap: wrap; margin-top: 20px; }
+        .video-box { border: 3px solid #00e676; border-radius: 12px; overflow: hidden; box-shadow: 0 0 20px rgba(0,230,118,0.2); }
+        .video-box img { display: block; }
+        .status-box { background: #1e1e1e; padding: 25px; border-radius: 12px; min-width: 280px; text-align: left; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .status-box h2 { color: #00e676; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .finger-row { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; font-size: 18px; }
+        .badge { padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; min-width: 45px; text-align: center; }
+        .on { background-color: #00e676; color: #000; box-shadow: 0 0 10px rgba(0,230,118,0.5); }
+        .off { background-color: #ff5252; color: #fff; }
+    </style>
+</head>
+<body>
+
+    <h1>ĐIỀU KHIỂN CỬ CHỈ BÀN TAY (ESP8266 + FLASK)</h1>
+
+    <div class="container">
+        <!-- Khung Livestream Video -->
+        <div class="video-box">
+            <img src="{{ url_for('video_feed') }}" width="640" height="480" alt="Webcam Stream">
+        </div>
+
+        <!-- Bảng Trạng Thái Ngón Tay -->
+        <div class="status-box">
+            <h2>Trạng Thái Ngón Tay</h2>
+            <div class="finger-row"><span>1. Ngón Cái:</span> <span id="f0" class="badge off">OFF</span></div>
+            <div class="finger-row"><span>2. Ngón Trỏ:</span> <span id="f1" class="badge off">OFF</span></div>
+            <div class="finger-row"><span>3. Ngón Giữa:</span> <span id="f2" class="badge off">OFF</span></div>
+            <div class="finger-row"><span>4. Áp Út:</span> <span id="f3" class="badge off">OFF</span></div>
+            <div class="finger-row"><span>5. Ngón Út:</span> <span id="f4" class="badge off">OFF</span></div>
+        </div>
+    </div>
+
+    <script>
+        // Cập nhật giao diện trạng thái thời gian thực từ server Flask
+        setInterval(() => {
+            fetch('/get_status')
+                .then(res => res.json())
+                .then(states => {
+                    states.forEach((state, i) => {
+                        const el = document.getElementById(`f${i}`);
+                        if (state === 1) {
+                            el.textContent = "ON";
+                            el.className = "badge on";
+                        } else {
+                            el.textContent = "OFF";
+                            el.className = "badge off";
+                        }
+                    });
+                });
+        }, 150);
+    </script>
+</body>
+</html>
