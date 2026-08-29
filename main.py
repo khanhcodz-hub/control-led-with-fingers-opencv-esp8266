@@ -6,7 +6,7 @@ from flask import Flask, render_template, Response, jsonify
 
 app = Flask(__name__)
 
-
+# --- GIỮ NGUYÊN 100%: KẾT NỐI SERIAL ---
 try:
     esp = serial.Serial(port='COM3', baudrate=9600, timeout=1)
     time.sleep(2)
@@ -15,13 +15,14 @@ except Exception as e:
     print(f"Loi ket noi Serial: {e}")
     esp = None
 
-
+# --- GIỮ NGUYÊN 100%: KHỞI TẠO MEDIAPIPE ---
 mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
 hands = mp_hands.Hands()
 
 current_finger_states = [0, 0, 0, 0, 0]
 
+# --- GIỮ NGUYÊN 100%: HÀM NHẬN DIỆN CỦA BẠN ---
 def detect_fingers(image, hand_landmarks):
     finger_tips = [8, 12, 16, 20]  # Trỏ, Giữa, Áp út, Út
     thumb_tip = 4
@@ -38,7 +39,7 @@ def detect_fingers(image, hand_landmarks):
 
     return finger_states
 
-#  BỌC VÒNG LẶP XỬ LÝ CAMERA ĐỂ ĐƯA LÊN WEB 
+# --- BỌC VÒNG LẶP XỬ LÝ CAMERA ĐỂ ĐƯA LÊN WEB ---
 def generate_frames():
     global current_finger_states
     cap = cv2.VideoCapture(0)
@@ -48,7 +49,7 @@ def generate_frames():
         if not success:
             break
 
-        
+        # GIỮ NGUYÊN 100%: Xử lý ảnh và MediaPipe
         image = cv2.cvtColor(cv2.flip(image, 1), cv2.COLOR_BGR2RGB)
         results = hands.process(image)
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
@@ -59,17 +60,17 @@ def generate_frames():
                 fingers_state = detect_fingers(image, hand_landmarks)
                 current_finger_states = fingers_state
                 
-                
+                # GIỮ NGUYÊN 100%: Gửi Serial & in Log terminal
                 if esp and esp.is_open:
                     esp.write(bytes(fingers_state))
                 print(f"Fingers State: {fingers_state}")
 
-                
+                # GIỮ NGUYÊN 100%: Vẽ chữ đếm ngón tay lên khung hình
                 fingers_up = sum(fingers_state)
                 cv2.putText(image, f'Fingers Up: {fingers_up}', (10, 50), 
                             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-        # Đưa khung hình ra dạng luồng byte hiển thị trên HTML 
+        # Đưa khung hình ra dạng luồng byte hiển thị trên HTML (thay cho cv2.imshow)
         ret, buffer = cv2.imencode('.jpg', image)
         frame_bytes = buffer.tobytes()
         yield (b'--frame\r\n'
@@ -77,7 +78,7 @@ def generate_frames():
 
     cap.release()
 
-
+# --- ĐỊNH TUYẾN WEB FLASK ---
 @app.route('/')
 def index():
     return render_template('index.html')
